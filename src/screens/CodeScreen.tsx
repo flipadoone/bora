@@ -1,43 +1,41 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, TextInput } from "react-native";
+import { View, Text, StyleSheet, TextInput, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 import BoraButton from "../components/BoraButton";
 
-export default function PhoneScreen() {
+export default function CodeScreen() {
+  const [code, setCode] = useState("");
   const navigation = useNavigation();
-  const [phone, setPhone] = useState("");
+
+  function handleContinue() {
+    if (code === "123456") {
+      navigation.navigate("Register" as never);
+      return;
+    }
+
+    Alert.alert("Erro", "Código inválido. Use 123456 para teste.");
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Digite seu telefone</Text>
+      <Text style={styles.title}>Digite o código</Text>
 
       <Text style={styles.subtitle}>
-        Vamos usar seu número para validar sua conta com segurança.
+        Enviamos um código de teste para seu telefone.
       </Text>
 
       <TextInput
         style={styles.input}
-        placeholder="(61) 99999-9999"
+        placeholder="123456"
         placeholderTextColor="#94A3B8"
-        keyboardType="phone-pad"
-        value={phone}
-        onChangeText={setPhone}
+        keyboardType="number-pad"
+        value={code}
+        onChangeText={setCode}
+        maxLength={6}
       />
 
-      <BoraButton
-  title="CONTINUAR"
-  onPress={() => {
-    const onlyNumbers = phone.replace(/\D/g, "");
-
-    if (onlyNumbers.length < 10) {
-      alert("Digite um telefone válido.");
-      return;
-    }
-
-    navigation.navigate("Code" as never);
-  }}
-/>
+      <BoraButton title="VALIDAR CÓDIGO" onPress={handleContinue} />
     </View>
   );
 }
@@ -50,7 +48,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
-
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -58,7 +55,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 16,
   },
-
   subtitle: {
     fontSize: 16,
     color: "#CBD5E1",
@@ -66,7 +62,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 32,
   },
-
   input: {
     width: "100%",
     backgroundColor: "rgba(255,255,255,0.12)",
@@ -76,7 +71,9 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     paddingHorizontal: 22,
     color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 22,
+    textAlign: "center",
+    letterSpacing: 6,
     marginBottom: 24,
   },
 });
