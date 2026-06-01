@@ -8,6 +8,7 @@ import BoraButton from "../components/BoraButton";
 export default function LocationScreen() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+
   const navigation = useNavigation();
 
   async function handleGetLocation() {
@@ -26,7 +27,7 @@ export default function LocationScreen() {
     setLatitude(currentLocation.coords.latitude);
     setLongitude(currentLocation.coords.longitude);
 
-    navigation.navigate("Home" as never);
+    navigation.navigate("TestSupabase" as never);
   }
 
   return (
@@ -37,7 +38,10 @@ export default function LocationScreen() {
         O Bora usará sua localização durante viagens para aumentar sua segurança.
       </Text>
 
-      <BoraButton title="PERMITIR LOCALIZAÇÃO" onPress={handleGetLocation} />
+      <BoraButton
+        title="PERMITIR LOCALIZAÇÃO"
+        onPress={handleGetLocation}
+      />
 
       {latitude !== null && longitude !== null && (
         <View style={styles.locationBox}>
