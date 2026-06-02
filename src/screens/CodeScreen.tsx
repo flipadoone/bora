@@ -8,38 +8,85 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import {
+  useNavigation,
+  useRoute,
+  RouteProp,
+} from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import BoraButton from "../components/BoraButton";
+import { supabase } from "../services/supabase";
+import { RootStackParamList } from "../navigation/types";
+
+type CodeScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Code"
+>;
+
+type CodeScreenRouteProp = RouteProp<
+  RootStackParamList,
+  "Code"
+>;
 
 export default function CodeScreen() {
   const [code, setCode] = useState("");
-  const navigation = useNavigation();
 
-  function handleContinue() {
-    if (code === "123456") {
-      navigation.navigate("Register" as never);
+  const navigation =
+    useNavigation<CodeScreenNavigationProp>();
+
+  const route = useRoute<CodeScreenRouteProp>();
+
+  const { sessionId } = route.params;
+
+  async function handleContinue() {
+    const { data: session, error } = await supabase
+      .from("onboarding_sessions")
+      .select("flow")
+      .eq("id", sessionId)
+      .single();
+
+    if (error || !session) {
+      Alert.alert(
+        "Erro",
+        "Sessão inválida. Tente novamente."
+      );
       return;
     }
 
-    if (code === "000000") {
-      navigation.navigate("Home" as never);
+    if (
+      session.flow === "register" &&
+      code === "123456"
+    ) {
+      navigation.navigate("Register");
+      return;
+    }
+
+    if (
+      session.flow === "login" &&
+      code === "000000"
+    ) {
+      navigation.navigate("Home");
       return;
     }
 
     Alert.alert(
       "Código inválido",
-      "Use 123456 para cadastro ou 000000 para login de teste."
+      session.flow === "register"
+        ? "Use 123456 para cadastro de teste."
+        : "Use 000000 para login de teste."
     );
   }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-        <Text style={styles.title}>Digite o código</Text>
+        <Text style={styles.title}>
+          Digite o código
+        </Text>
 
         <Text style={styles.subtitle}>
-          Use 123456 para cadastro novo ou 000000 para login de teste.
+          Digite o código recebido para continuar.
         </Text>
 
         <TextInput
@@ -52,7 +99,10 @@ export default function CodeScreen() {
           maxLength={6}
         />
 
-        <BoraButton title="VALIDAR CÓDIGO" onPress={handleContinue} />
+        <BoraButton
+          title="VALIDAR CÓDIGO"
+          onPress={handleContinue}
+        />
       </View>
     </TouchableWithoutFeedback>
   );
@@ -66,6 +116,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
+
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -73,6 +124,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 16,
   },
+
   subtitle: {
     fontSize: 16,
     color: "#CBD5E1",
@@ -80,6 +132,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 32,
   },
+
   input: {
     width: "100%",
     backgroundColor: "rgba(255,255,255,0.12)",

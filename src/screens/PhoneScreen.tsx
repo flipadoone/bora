@@ -9,16 +9,21 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import BoraButton from "../components/BoraButton";
 import { supabase } from "../services/supabase";
+import { RootStackParamList } from "../navigation/types";
+
+type PhoneScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Phone"
+>;
 
 function formatPhone(value: string) {
   const onlyNumbers = value.replace(/\D/g, "").slice(0, 11);
 
-  if (onlyNumbers.length <= 2) {
-    return onlyNumbers;
-  }
+  if (onlyNumbers.length <= 2) return onlyNumbers;
 
   if (onlyNumbers.length <= 7) {
     return `(${onlyNumbers.slice(0, 2)}) ${onlyNumbers.slice(2)}`;
@@ -32,12 +37,12 @@ function formatPhone(value: string) {
 
 function isValidPhone(phone: string) {
   const onlyNumbers = phone.replace(/\D/g, "");
-
   return onlyNumbers.length === 10 || onlyNumbers.length === 11;
 }
 
 export default function PhoneScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<PhoneScreenNavigationProp>();
+
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -54,36 +59,61 @@ export default function PhoneScreen() {
 
     setLoading(true);
 
-    const { data, error } = await supabase
+    const { data: existingProfile, error: profileError } = await supabase
       .from("profiles")
       .select("id")
       .eq("phone", onlyNumbers)
       .maybeSingle();
 
-    setLoading(false);
-
-    if (error) {
-      console.log("Erro ao consultar telefone:", error);
+    if (profileError) {
+      setLoading(false);
+      console.log("Erro ao verificar telefone:", profileError);
       Alert.alert("Erro", "Não foi possível verificar o telefone agora.");
       return;
     }
 
-    if (data) {
-      Alert.alert(
-        "Código de login enviado",
-        "Este telefone já possui conta. Use o código 123456 para teste."
+    const flow = existingProfile ? "login" : "register";
+
+    const { data: session, error: sessionError } = await supabase
+      .from("onboarding_sessions")
+      .upsert(
+        {
+          phone: onlyNumbers,
+          flow,
+          verified: false,
+          profile_id: existingProfile?.id ?? null,
+        },
+        {
+          onConflict: "phone",
+        }
+      )
+      .select("id")
+      .single();
+
+    setLoading(false);
+
+    if (sessionError || !session) {
+      console.log(
+        "SESSION ERROR:",
+        JSON.stringify(sessionError, null, 2)
       );
 
-      navigation.navigate("Code" as never);
+      Alert.alert("Erro Supabase", JSON.stringify(sessionError));
       return;
     }
 
-    Alert.alert(
-      "Código de cadastro enviado",
-      "Telefone novo. Use o código 123456 para iniciar seu cadastro."
-    );
+    if (flow === "login") {
+      Alert.alert("Código de login enviado", "Use 000000 para login de teste.");
+    } else {
+      Alert.alert(
+        "Código de cadastro enviado",
+        "Use 123456 para cadastro de teste."
+      );
+    }
 
-    navigation.navigate("Code" as never);
+    navigation.navigate("Code", {
+      sessionId: session.id,
+    });
   }
 
   return (
@@ -101,9 +131,7 @@ export default function PhoneScreen() {
           placeholderTextColor="#94A3B8"
           keyboardType="phone-pad"
           value={phone}
-          onChangeText={(text) => {
-            setPhone(formatPhone(text));
-          }}
+          onChangeText={(text) => setPhone(formatPhone(text))}
           maxLength={15}
         />
 

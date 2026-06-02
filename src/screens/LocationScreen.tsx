@@ -27,7 +27,7 @@ export default function LocationScreen() {
     setLatitude(currentLocation.coords.latitude);
     setLongitude(currentLocation.coords.longitude);
 
-    navigation.navigate("TestSupabase" as never);
+    navigation.navigate("Home" as never);
   }
 
   return (
