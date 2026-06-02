@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, TextInput, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 
 import BoraButton from "../components/BoraButton";
@@ -14,29 +22,39 @@ export default function CodeScreen() {
       return;
     }
 
-    Alert.alert("Erro", "Código inválido. Use 123456 para teste.");
+    if (code === "000000") {
+      navigation.navigate("Home" as never);
+      return;
+    }
+
+    Alert.alert(
+      "Código inválido",
+      "Use 123456 para cadastro ou 000000 para login de teste."
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Digite o código</Text>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Digite o código</Text>
 
-      <Text style={styles.subtitle}>
-        Enviamos um código de teste para seu telefone.
-      </Text>
+        <Text style={styles.subtitle}>
+          Use 123456 para cadastro novo ou 000000 para login de teste.
+        </Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="123456"
-        placeholderTextColor="#94A3B8"
-        keyboardType="number-pad"
-        value={code}
-        onChangeText={setCode}
-        maxLength={6}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="123456"
+          placeholderTextColor="#94A3B8"
+          keyboardType="number-pad"
+          value={code}
+          onChangeText={setCode}
+          maxLength={6}
+        />
 
-      <BoraButton title="VALIDAR CÓDIGO" onPress={handleContinue} />
-    </View>
+        <BoraButton title="VALIDAR CÓDIGO" onPress={handleContinue} />
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
