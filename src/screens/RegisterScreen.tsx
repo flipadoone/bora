@@ -8,9 +8,19 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import BoraButton from "../components/BoraButton";
+import { supabase } from "../services/supabase";
+import { RootStackParamList } from "../navigation/types";
+
+type RegisterScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Register"
+>;
+
+type RegisterScreenRouteProp = RouteProp<RootStackParamList, "Register">;
 
 function isValidCpf(cpf: string) {
   const onlyNumbers = cpf.replace(/\D/g, "");
@@ -74,13 +84,17 @@ function isValidBirthDate(birthDate: string) {
 }
 
 export default function RegisterScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<RegisterScreenNavigationProp>();
+  const route = useRoute<RegisterScreenRouteProp>();
+
+  const { sessionId } = route.params;
 
   const [fullName, setFullName] = useState("");
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function handleContinue() {
+  async function handleContinue() {
     if (!fullName || !cpf || !birthDate) {
       Alert.alert("Atenção", "Preencha todos os campos.");
       return;
@@ -91,12 +105,15 @@ export default function RegisterScreen() {
       return;
     }
 
-    if (!isValidCpf(cpf)) {
+    const cleanCpf = cpf.replace(/\D/g, "");
+    const cleanBirthDate = birthDate.replace(/\D/g, "");
+
+    if (!isValidCpf(cleanCpf)) {
       Alert.alert("CPF inválido", "Digite um CPF válido com 11 números.");
       return;
     }
 
-    if (!isValidBirthDate(birthDate)) {
+    if (!isValidBirthDate(cleanBirthDate)) {
       Alert.alert(
         "Data inválida",
         "Digite uma data válida. Você precisa ter pelo menos 18 anos."
@@ -104,7 +121,53 @@ export default function RegisterScreen() {
       return;
     }
 
-    navigation.navigate("Role" as never);
+    setLoading(true);
+
+    const { data: existingCpf, error: cpfError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("cpf", cleanCpf)
+      .maybeSingle();
+
+    if (cpfError) {
+      setLoading(false);
+      Alert.alert("Erro", "Não foi possível verificar o CPF agora.");
+      return;
+    }
+
+    if (existingCpf) {
+      setLoading(false);
+      Alert.alert(
+        "CPF já cadastrado",
+        "Este CPF já está vinculado a uma conta. Verifique seus dados ou tente fazer login."
+      );
+      return;
+    }
+
+    const { error } = await supabase
+      .from("onboarding_sessions")
+      .update({
+        full_name: fullName.trim(),
+        cpf: cleanCpf,
+        birth_date: cleanBirthDate,
+      })
+      .eq("id", sessionId);
+
+    setLoading(false);
+
+    if (error) {
+      console.log("Erro ao salvar dados do cadastro:", error);
+
+      Alert.alert(
+        "Erro",
+        "Não foi possível salvar seus dados agora."
+      );
+      return;
+    }
+
+    navigation.navigate("Role", {
+      sessionId,
+    });
   }
 
   return (
@@ -144,7 +207,10 @@ export default function RegisterScreen() {
           maxLength={8}
         />
 
-        <BoraButton title="CONTINUAR" onPress={handleContinue} />
+        <BoraButton
+          title={loading ? "SALVANDO..." : "CONTINUAR"}
+          onPress={handleContinue}
+        />
       </View>
     </TouchableWithoutFeedback>
   );

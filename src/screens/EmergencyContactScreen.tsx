@@ -8,9 +8,22 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import BoraButton from "../components/BoraButton";
+import { supabase } from "../services/supabase";
+import { RootStackParamList } from "../navigation/types";
+
+type EmergencyContactNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "EmergencyContact"
+>;
+
+type EmergencyContactRouteProp = RouteProp<
+  RootStackParamList,
+  "EmergencyContact"
+>;
 
 function formatPhone(value: string) {
   const onlyNumbers = value.replace(/\D/g, "").slice(0, 11);
@@ -31,18 +44,21 @@ function formatPhone(value: string) {
 
 function isValidPhone(phone: string) {
   const onlyNumbers = phone.replace(/\D/g, "");
-
   return onlyNumbers.length === 10 || onlyNumbers.length === 11;
 }
 
 export default function EmergencyContactScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<EmergencyContactNavigationProp>();
+  const route = useRoute<EmergencyContactRouteProp>();
+
+  const { sessionId } = route.params;
 
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [relationship, setRelationship] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [codeSent, setCodeSent] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   function validateContactData() {
     if (!contactName || !contactPhone || !relationship) {
@@ -74,11 +90,10 @@ export default function EmergencyContactScreen() {
     }
 
     Alert.alert("Código enviado", "Use 654321 para teste.");
-
     setCodeSent(true);
   }
 
-  function handleValidateCode() {
+  async function handleValidateCode() {
     if (!verificationCode) {
       Alert.alert("Atenção", "Digite o código de verificação.");
       return;
@@ -89,7 +104,42 @@ export default function EmergencyContactScreen() {
       return;
     }
 
-    navigation.navigate("Location" as never);
+    const isValid = validateContactData();
+
+    if (!isValid) {
+      return;
+    }
+
+    const cleanPhone = contactPhone.replace(/\D/g, "");
+
+    setLoading(true);
+
+    const { error } = await supabase
+      .from("onboarding_sessions")
+      .update({
+        emergency_contact_name: contactName.trim(),
+        emergency_contact_phone: cleanPhone,
+        emergency_contact_relationship: relationship.trim(),
+        emergency_contact_verified: true,
+      })
+      .eq("id", sessionId);
+
+    setLoading(false);
+
+    if (error) {
+      console.log("Erro ao salvar contato de emergência:", error);
+
+      Alert.alert(
+        "Erro",
+        "Não foi possível salvar o contato de emergência agora."
+      );
+
+      return;
+    }
+
+    navigation.navigate("Location", {
+      sessionId,
+    });
   }
 
   return (
@@ -144,7 +194,7 @@ export default function EmergencyContactScreen() {
             />
 
             <BoraButton
-              title="VALIDAR CÓDIGO"
+              title={loading ? "SALVANDO..." : "VALIDAR CÓDIGO"}
               onPress={handleValidateCode}
             />
           </>

@@ -32,9 +32,7 @@ type CodeScreenRouteProp = RouteProp<
 export default function CodeScreen() {
   const [code, setCode] = useState("");
 
-  const navigation =
-    useNavigation<CodeScreenNavigationProp>();
-
+  const navigation = useNavigation<CodeScreenNavigationProp>();
   const route = useRoute<CodeScreenRouteProp>();
 
   const { sessionId } = route.params;
@@ -47,25 +45,18 @@ export default function CodeScreen() {
       .single();
 
     if (error || !session) {
-      Alert.alert(
-        "Erro",
-        "Sessão inválida. Tente novamente."
-      );
+      Alert.alert("Erro", "Sessão inválida. Tente novamente.");
       return;
     }
 
-    if (
-      session.flow === "register" &&
-      code === "123456"
-    ) {
-      navigation.navigate("Register");
+    if (session.flow === "register" && code === "123456") {
+      navigation.navigate("Register", {
+        sessionId,
+      });
       return;
     }
 
-    if (
-      session.flow === "login" &&
-      code === "000000"
-    ) {
+    if (session.flow === "login" && code === "000000") {
       navigation.navigate("Home");
       return;
     }
@@ -81,9 +72,7 @@ export default function CodeScreen() {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
-        <Text style={styles.title}>
-          Digite o código
-        </Text>
+        <Text style={styles.title}>Digite o código</Text>
 
         <Text style={styles.subtitle}>
           Digite o código recebido para continuar.

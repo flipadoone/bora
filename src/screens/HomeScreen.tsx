@@ -3,10 +3,10 @@ import { View, Text, StyleSheet } from "react-native";
 export default function HomeScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bem-vindo de volta</Text>
+      <Text style={styles.title}>Bem-vindo ao Bora</Text>
 
       <Text style={styles.subtitle}>
-        Sua conta já existe. Você entrou no Bora.
+        Mobilidade comunitaria facilitando sua vida.
       </Text>
     </View>
   );
