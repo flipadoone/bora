@@ -1,15 +1,29 @@
 import { useState } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import * as Location from "expo-location";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 import BoraButton from "../components/BoraButton";
+import { supabase } from "../services/supabase";
+import { RootStackParamList } from "../navigation/types";
+
+type LocationNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Location"
+>;
+
+type LocationRouteProp = RouteProp<RootStackParamList, "Location">;
 
 export default function LocationScreen() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const navigation = useNavigation();
+  const navigation = useNavigation<LocationNavigationProp>();
+  const route = useRoute<LocationRouteProp>();
+
+  const { sessionId } = route.params;
 
   async function handleGetLocation() {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -27,7 +41,27 @@ export default function LocationScreen() {
     setLatitude(currentLocation.coords.latitude);
     setLongitude(currentLocation.coords.longitude);
 
-    navigation.navigate("Home" as never);
+    setLoading(true);
+
+    const { error } = await supabase.rpc("finalize_onboarding", {
+      p_session_id: sessionId,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      console.log("Erro ao finalizar cadastro:", error);
+
+      Alert.alert(
+        "Erro",
+        "Não foi possível finalizar seu cadastro agora."
+      );
+      return;
+    }
+
+    Alert.alert("Sucesso", "Cadastro finalizado com segurança.");
+
+    navigation.navigate("Home");
   }
 
   return (
@@ -39,7 +73,7 @@ export default function LocationScreen() {
       </Text>
 
       <BoraButton
-        title="PERMITIR LOCALIZAÇÃO"
+        title={loading ? "FINALIZANDO..." : "PERMITIR LOCALIZAÇÃO"}
         onPress={handleGetLocation}
       />
 
