@@ -61,7 +61,10 @@ export default function LocationScreen() {
 
     Alert.alert("Sucesso", "Cadastro finalizado com segurança.");
 
-    navigation.navigate("Home");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Home" }],
+    });
   }
 
   return (
@@ -69,7 +72,8 @@ export default function LocationScreen() {
       <Text style={styles.title}>Localização de segurança</Text>
 
       <Text style={styles.subtitle}>
-        O Bora usará sua localização durante viagens para aumentar sua segurança.
+        O Bora usará sua localização durante viagens para aumentar sua
+        segurança.
       </Text>
 
       <BoraButton
@@ -79,8 +83,13 @@ export default function LocationScreen() {
 
       {latitude !== null && longitude !== null && (
         <View style={styles.locationBox}>
-          <Text style={styles.locationText}>Latitude: {latitude}</Text>
-          <Text style={styles.locationText}>Longitude: {longitude}</Text>
+          <Text style={styles.locationText}>
+            Latitude: {latitude}
+          </Text>
+
+          <Text style={styles.locationText}>
+            Longitude: {longitude}
+          </Text>
         </View>
       )}
     </View>
@@ -94,6 +103,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 24,
   },
+
   title: {
     fontSize: 28,
     fontWeight: "bold",
@@ -101,6 +111,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 16,
   },
+
   subtitle: {
     fontSize: 16,
     color: "#CBD5E1",
@@ -108,6 +119,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 32,
   },
+
   locationBox: {
     marginTop: 24,
     padding: 16,
@@ -116,6 +128,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.20)",
   },
+
   locationText: {
     color: "#FFFFFF",
     fontSize: 14,

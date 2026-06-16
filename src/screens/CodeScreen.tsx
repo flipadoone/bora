@@ -24,10 +24,7 @@ type CodeScreenNavigationProp = NativeStackNavigationProp<
   "Code"
 >;
 
-type CodeScreenRouteProp = RouteProp<
-  RootStackParamList,
-  "Code"
->;
+type CodeScreenRouteProp = RouteProp<RootStackParamList, "Code">;
 
 export default function CodeScreen() {
   const [code, setCode] = useState("");
@@ -57,7 +54,10 @@ export default function CodeScreen() {
     }
 
     if (session.flow === "login" && code === "000000") {
-      navigation.navigate("Home");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Home" }],
+      });
       return;
     }
 
@@ -88,10 +88,7 @@ export default function CodeScreen() {
           maxLength={6}
         />
 
-        <BoraButton
-          title="VALIDAR CÓDIGO"
-          onPress={handleContinue}
-        />
+        <BoraButton title="VALIDAR CÓDIGO" onPress={handleContinue} />
       </View>
     </TouchableWithoutFeedback>
   );
