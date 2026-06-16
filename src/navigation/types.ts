@@ -6,6 +6,8 @@ export type RootStackParamList = {
   Role: { sessionId: string };
   EmergencyContact: { sessionId: string };
   Location: { sessionId: string };
+  CreateRoute: undefined;
+  RouteList: undefined;
   TestSupabase: undefined;
   Home: undefined;
 };

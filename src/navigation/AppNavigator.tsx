@@ -13,6 +13,8 @@ import RoleScreen from "../screens/RoleScreen";
 import EmergencyContactScreen from "../screens/EmergencyContactScreen";
 import LocationScreen from "../screens/LocationScreen";
 import HomeScreen from "../screens/HomeScreen";
+import CreateRouteScreen from "../screens/CreateRouteScreen";
+import RouteListScreen from "../screens/RouteListScreen";
 
 import { getProfileId } from "../services/authStorage";
 
@@ -56,11 +58,10 @@ export default function AppNavigator() {
         <Stack.Screen name="Code" component={CodeScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="Role" component={RoleScreen} />
-        <Stack.Screen
-          name="EmergencyContact"
-          component={EmergencyContactScreen}
-        />
+        <Stack.Screen name="EmergencyContact" component={EmergencyContactScreen} />
         <Stack.Screen name="Location" component={LocationScreen} />
+        <Stack.Screen name="CreateRoute" component={CreateRouteScreen} />
+        <Stack.Screen name="RouteList" component={RouteListScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
       </Stack.Navigator>
     </NavigationContainer>

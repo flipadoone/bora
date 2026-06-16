@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
@@ -99,6 +105,14 @@ export default function HomeScreen() {
     });
   }
 
+  function handleCreateRoute() {
+    navigation.navigate("CreateRoute");
+  }
+
+  function handleRouteList() {
+    navigation.navigate("RouteList");
+  }
+
   async function handleLogout() {
     await clearProfileId();
 
@@ -110,6 +124,13 @@ export default function HomeScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity
+        style={styles.settingsButton}
+        onPress={handleLogout}
+      >
+        <Text style={styles.settingsIcon}>⚙️</Text>
+      </TouchableOpacity>
+
       <Text style={styles.title}>Bem-vindo ao Bora</Text>
 
       {profile ? (
@@ -161,7 +182,15 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          <BoraButton title="SAIR DA CONTA" onPress={handleLogout} />
+          {profile.role === "motorista" && (
+            <>
+              <BoraButton title="CRIAR ROTA" onPress={handleCreateRoute} />
+
+              <View style={styles.spacing} />
+            </>
+          )}
+
+          <BoraButton title="VER ROTAS" onPress={handleRouteList} />
         </>
       ) : (
         <Text style={styles.subtitle}>Carregando perfil...</Text>
@@ -177,6 +206,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 24,
+  },
+
+  settingsButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
+    zIndex: 999,
+  },
+
+  settingsIcon: {
+    fontSize: 28,
   },
 
   title: {
@@ -235,5 +275,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginTop: 12,
     textAlign: "center",
+  },
+
+  spacing: {
+    height: 16,
   },
 });
