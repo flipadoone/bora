@@ -7,6 +7,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import BoraButton from "../components/BoraButton";
 import { supabase } from "../services/supabase";
 import { RootStackParamList } from "../navigation/types";
+import { saveProfileId } from "../services/authStorage";
 
 type LocationNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -43,13 +44,13 @@ export default function LocationScreen() {
 
     setLoading(true);
 
-    const { error } = await supabase.rpc("finalize_onboarding", {
+    const { data: profileId, error } = await supabase.rpc("finalize_onboarding", {
       p_session_id: sessionId,
     });
 
     setLoading(false);
 
-    if (error) {
+    if (error || !profileId) {
       console.log("Erro ao finalizar cadastro:", error);
 
       Alert.alert(
@@ -58,6 +59,8 @@ export default function LocationScreen() {
       );
       return;
     }
+
+    await saveProfileId(profileId);
 
     Alert.alert("Sucesso", "Cadastro finalizado com segurança.");
 
@@ -83,13 +86,9 @@ export default function LocationScreen() {
 
       {latitude !== null && longitude !== null && (
         <View style={styles.locationBox}>
-          <Text style={styles.locationText}>
-            Latitude: {latitude}
-          </Text>
+          <Text style={styles.locationText}>Latitude: {latitude}</Text>
 
-          <Text style={styles.locationText}>
-            Longitude: {longitude}
-          </Text>
+          <Text style={styles.locationText}>Longitude: {longitude}</Text>
         </View>
       )}
     </View>

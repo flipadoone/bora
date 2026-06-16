@@ -1,7 +1,17 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
+import BoraButton from "../components/BoraButton";
 import { supabase } from "../services/supabase";
+import { clearProfileId, getProfileId } from "../services/authStorage";
+import { RootStackParamList } from "../navigation/types";
+
+type HomeNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Home"
+>;
 
 type Profile = {
   id: string;
@@ -21,9 +31,12 @@ type Stats = {
 };
 
 export default function HomeScreen() {
+  const navigation = useNavigation<HomeNavigationProp>();
+
   const [profile, setProfile] = useState<Profile | null>(null);
   const [emergencyContact, setEmergencyContact] =
     useState<EmergencyContact | null>(null);
+
   const [stats, setStats] = useState<Stats>({
     profilesCount: 0,
     verifiedContactsCount: 0,
@@ -34,11 +47,20 @@ export default function HomeScreen() {
   }, []);
 
   async function loadHomeData() {
+    const savedProfileId = await getProfileId();
+
+    if (!savedProfileId) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Welcome" }],
+      });
+      return;
+    }
+
     const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("id, full_name, role")
-      .order("created_at", { ascending: false })
-      .limit(1)
+      .eq("id", savedProfileId)
       .single();
 
     if (profileError || !profileData) {
@@ -74,6 +96,15 @@ export default function HomeScreen() {
     setStats({
       profilesCount: profilesCount ?? 0,
       verifiedContactsCount: verifiedContactsCount ?? 0,
+    });
+  }
+
+  async function handleLogout() {
+    await clearProfileId();
+
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Welcome" }],
     });
   }
 
@@ -114,9 +145,7 @@ export default function HomeScreen() {
                 </Text>
               </>
             ) : (
-              <Text style={styles.subtitle}>
-                Nenhum contato encontrado.
-              </Text>
+              <Text style={styles.subtitle}>Nenhum contato encontrado.</Text>
             )}
           </View>
 
@@ -131,6 +160,8 @@ export default function HomeScreen() {
               Contatos validados: {stats.verifiedContactsCount}
             </Text>
           </View>
+
+          <BoraButton title="SAIR DA CONTA" onPress={handleLogout} />
         </>
       ) : (
         <Text style={styles.subtitle}>Carregando perfil...</Text>

@@ -18,6 +18,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import BoraButton from "../components/BoraButton";
 import { supabase } from "../services/supabase";
 import { RootStackParamList } from "../navigation/types";
+import { saveProfileId } from "../services/authStorage";
 
 type CodeScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -37,7 +38,7 @@ export default function CodeScreen() {
   async function handleContinue() {
     const { data: session, error } = await supabase
       .from("onboarding_sessions")
-      .select("flow")
+      .select("flow, profile_id")
       .eq("id", sessionId)
       .single();
 
@@ -54,6 +55,16 @@ export default function CodeScreen() {
     }
 
     if (session.flow === "login" && code === "000000") {
+      if (!session.profile_id) {
+        Alert.alert(
+          "Erro",
+          "Não foi possível encontrar sua conta."
+        );
+        return;
+      }
+
+      await saveProfileId(session.profile_id);
+
       navigation.reset({
         index: 0,
         routes: [{ name: "Home" }],
