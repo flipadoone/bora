@@ -4,9 +4,12 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  Alert,
 } from "react-native";
 
+import BoraButton from "../components/BoraButton";
 import { supabase } from "../services/supabase";
+import { getProfileId } from "../services/authStorage";
 
 type Route = {
   id: string;
@@ -17,6 +20,7 @@ type Route = {
 
 export default function RouteListScreen() {
   const [routes, setRoutes] = useState<Route[]>([]);
+  const [loadingRouteId, setLoadingRouteId] = useState<string | null>(null);
 
   useEffect(() => {
     loadRoutes();
@@ -46,6 +50,41 @@ export default function RouteListScreen() {
     setRoutes(data || []);
   }
 
+  async function handleRequestRide(routeId: string) {
+    const profileId = await getProfileId();
+
+    if (!profileId) {
+      Alert.alert("Erro", "Usuário não encontrado. Faça login novamente.");
+      return;
+    }
+
+    setLoadingRouteId(routeId);
+
+    const { error } = await supabase.from("ride_requests").insert({
+      route_id: routeId,
+      passenger_id: profileId,
+      status: "pending",
+    });
+
+    setLoadingRouteId(null);
+
+    if (error) {
+      console.log("Erro ao solicitar entrada na rota:", error);
+
+      Alert.alert(
+        "Erro",
+        "Não foi possível solicitar entrada nessa rota agora."
+      );
+
+      return;
+    }
+
+    Alert.alert(
+      "Solicitação enviada",
+      "O motorista poderá aceitar ou recusar sua solicitação."
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Rotas ativas</Text>
@@ -58,25 +97,28 @@ export default function RouteListScreen() {
         }}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text style={styles.destination}>
-              {item.destination}
-            </Text>
+            <Text style={styles.destination}>{item.destination}</Text>
 
-            <Text style={styles.info}>
-              Vagas: {item.available_seats}
-            </Text>
+            <Text style={styles.info}>Vagas: {item.available_seats}</Text>
 
             <Text style={styles.date}>
-              {new Date(
-                item.created_at
-              ).toLocaleString()}
+              Criada em {new Date(item.created_at).toLocaleString()}
             </Text>
+
+            <View style={styles.buttonWrapper}>
+              <BoraButton
+                title={
+                  loadingRouteId === item.id
+                    ? "ENVIANDO..."
+                    : "ENTRAR NESSA ROTA"
+                }
+                onPress={() => handleRequestRide(item.id)}
+              />
+            </View>
           </View>
         )}
         ListEmptyComponent={
-          <Text style={styles.empty}>
-            Nenhuma rota ativa encontrada.
-          </Text>
+          <Text style={styles.empty}>Nenhuma rota ativa encontrada.</Text>
         }
       />
     </View>
@@ -123,6 +165,11 @@ const styles = StyleSheet.create({
   date: {
     color: "#94A3B8",
     fontSize: 12,
+    marginBottom: 16,
+  },
+
+  buttonWrapper: {
+    marginTop: 8,
   },
 
   empty: {
