@@ -7,6 +7,7 @@ export type RootStackParamList = {
   EmergencyContact: { sessionId: string };
   Location: { sessionId: string };
   CreateRoute: undefined;
+  DriverRequests: undefined;
   RouteList: undefined;
   TestSupabase: undefined;
   Home: undefined;
